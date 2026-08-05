@@ -1,9 +1,10 @@
-// This asks for your key in the browser and saves it securely on your PC
-let API_KEY = localStorage.getItem('AQ.Ab8RN6LGsS10MZWBqOzrLuiNrovh3ZcMt5KWJ0LvAaTC9ZFz8g');
+// Get key from storage or prompt user
+let API_KEY = localStorage.getItem('AQ.Ab8RN6KtM4lnwWCMVotwJ6dRPI4yC8RvKAzCtcw3zKgguZ3HOA');
 
 if (!API_KEY) {
-  API_KEY = prompt('Please paste your Google Gemini API Key:');
+  API_KEY = prompt('AQ.Ab8RN6KtM4lnwWCMVotwJ6dRPI4yC8RvKAzCtcw3zKgguZ3HOA');
   if (API_KEY) {
+    API_KEY = API_KEY.trim(); // Removes any accidental spaces
     localStorage.setItem('gemini_key', API_KEY);
   }
 }
@@ -41,9 +42,12 @@ chatForm.addEventListener('submit', async function(e) {
   const loadingBubble = addMessage('ai', 'Thinking...');
 
   try {
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`, {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'x-goog-api-key': API_KEY // Official header method
+      },
       body: JSON.stringify({
         contents: [{ parts: [{ text: userMessage }] }]
       })
@@ -55,7 +59,12 @@ chatForm.addEventListener('submit', async function(e) {
       const aiReply = data.candidates[0].content.parts[0].text;
       loadingBubble.textContent = aiReply;
     } else {
-      loadingBubble.textContent = `Error: ${data.error?.message || 'Check your API Key'}`;
+      loadingBubble.textContent = `Error: ${data.error?.message || 'Invalid API key or response'}`;
+      // If key is invalid, offer to clear it
+      if (data.error?.code === 400 || data.error?.code === 401) {
+        localStorage.removeItem('gemini_key');
+        API_KEY = null;
+      }
     }
   } catch (err) {
     loadingBubble.textContent = 'Connection error. Check your browser console.';
