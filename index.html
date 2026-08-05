@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Custom AI Chat</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="chat-header">
+      <h1>My AI Assistant</h1>
+    </header>
+
+    <main class="chat-box" id="chat-box">
+      <!-- Default welcome message -->
+      <div class="message-wrapper ai">
+        <div class="message-bubble">
+          Hello! I am your AI assistant. How can I help you today?
+        </div>
+      </div>
+    </main>
+
+    <form class="input-area" id="chat-form">
+      <input 
+        type="text" 
+        id="chat-input" 
+        placeholder="Message the AI..." 
+        autocomplete="off" 
+        required 
+      />
+      <button type="submit" id="send-button">Send</button>
+    </form>
+  </div>
+  
+  <script src="script.js"></script>
+</body>
+</html>
