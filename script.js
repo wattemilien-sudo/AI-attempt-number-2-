@@ -2,7 +2,7 @@
 let API_KEY = localStorage.getItem('AQ.Ab8RN6KtM4lnwWCMVotwJ6dRPI4yC8RvKAzCtcw3zKgguZ3HOA');
 
 if (!API_KEY) {
-  API_KEY = prompt('AQ.Ab8RN6KtM4lnwWCMVotwJ6dRPI4yC8RvKAzCtcw3zKgguZ3HOA');
+  API_KEY = prompt('Please paste gemini api key');
   if (API_KEY) {
     API_KEY = API_KEY.trim(); // Removes any accidental spaces
     localStorage.setItem('gemini_key', API_KEY);
