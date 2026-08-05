@@ -3,131 +3,62 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ultimate Offline AI Workspace</title>
+  <title>Local Smart AI Assistant</title>
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background-color: #121214; color: #e1e1e6; margin: 0; display: flex; height: 100vh; }
+    body { background-color: #0f172a; color: #f8fafc; margin: 0; display: flex; flex-direction: column; height: 100vh; }
     
-    /* Left Sidebar: Knowledge Base */
-    #sidebar { width: 320px; background-color: #1e1e24; padding: 20px; border-right: 1px solid #292932; display: flex; flex-direction: column; gap: 10px; }
-    #sidebar h2 { font-size: 1.1rem; margin: 0 0 5px 0; color: #a855f7; }
-    #sidebar p { font-size: 0.85rem; color: #a1a1aa; margin: 0; }
-    #knowledge-base { width: 100%; flex-grow: 1; background: #121214; border: 1px solid #3f3f46; color: #fff; padding: 10px; border-radius: 8px; resize: none; font-size: 0.85rem; }
-    #gpt-status { font-size: 0.8rem; color: #fbbf24; font-weight: bold; background: #27272a; padding: 10px; border-radius: 8px; text-align: center; }
+    #header { padding: 15px 20px; background: #1e293b; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+    #title { font-weight: bold; font-size: 1.1rem; }
+    #status { font-size: 0.85rem; color: #a855f7; font-weight: bold; }
     
-    /* Right Side: Chat Container */
-    #chat-container { flex-grow: 1; display: flex; flex-direction: column; }
-    #chat-header { padding: 15px 20px; background-color: #1e1e24; border-bottom: 1px solid #292932; font-weight: bold; display: flex; justify-content: space-between; }
     #chat-box { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
     
-    /* Chat Bubbles */
     .message-wrapper { display: flex; width: 100%; }
     .message-wrapper.user { justify-content: flex-end; }
     .message-wrapper.ai { justify-content: flex-start; }
     
-    .message-bubble { max-width: 70%; padding: 12px 16px; border-radius: 12px; font-size: 0.95rem; line-height: 1.4; white-space: pre-wrap; }
-    .user .message-bubble { background-color: #9333ea; color: white; border-bottom-right-radius: 2px; }
-    .ai .message-bubble { background-color: #27272a; color: #e1e1e6; border-bottom-left-radius: 2px; border: 1px solid #3f3f46; }
-    .gpt2 .message-bubble { background-color: #064e3b; color: #ecfdf5; border-bottom-left-radius: 2px; border: 1px solid #047857; }
+    .message-bubble { max-width: 80%; padding: 14px 18px; border-radius: 12px; font-size: 0.95rem; line-height: 1.5; white-space: pre-wrap; }
+    .user .message-bubble { background-color: #a855f7; color: white; border-bottom-right-radius: 2px; }
+    .ai .message-bubble { background-color: #1e293b; color: #f8fafc; border-bottom-left-radius: 2px; border: 1px solid #334155; }
 
-    /* Input Bar */
-    #chat-form { display: flex; padding: 15px 20px; background-color: #1e1e24; border-top: 1px solid #292932; gap: 10px; align-items: center; }
-    #chat-input { flex-grow: 1; padding: 12px 16px; background: #121214; border: 1px solid #3f3f46; border-radius: 8px; color: white; outline: none; }
+    #chat-form { display: flex; padding: 15px 20px; background-color: #1e293b; border-top: 1px solid #334155; gap: 10px; }
+    #chat-input { flex-grow: 1; padding: 12px 16px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: white; outline: none; font-size: 0.95rem; }
     #chat-input:focus { border-color: #a855f7; }
     
-    .btn { padding: 12px 15px; border: none; font-weight: bold; border-radius: 8px; cursor: pointer; color: white; transition: 0.2s; }
-    #search-btn { background-color: #9333ea; }
-    #search-btn:hover { background-color: #a855f7; }
-    #gpt-btn { background-color: #059669; }
-    #gpt-btn:hover { background-color: #10b981; }
-    #gpt-btn:disabled { background-color: #3f3f46; cursor: not-allowed; color: #a1a1aa; }
+    button { padding: 12px 24px; background-color: #a855f7; border: none; color: white; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+    button:hover { background-color: #9333ea; }
+    button:disabled { background-color: #475569; cursor: not-allowed; }
   </style>
 </head>
 <body>
 
-  <!-- Left Side: Knowledge Base -->
-  <div id="sidebar">
-    <h2>🧠 AI Memory Bank</h2>
-    <p>Paste your notes here. The Search Engine will use them to answer facts.</p>
-    <textarea id="knowledge-base" placeholder="Example:
-Biology Test is on Friday at 2:00 PM.
-Photosynthesis converts sunlight into sugar."></textarea>
-    <div id="gpt-status">⏳ Downloading GPT-2 into browser cache...</div>
+  <div id="header">
+    <span id="title">🤖 Smart Instruction-Following AI</span>
+    <span id="status">⏳ Downloading AI Brain...</span>
   </div>
 
-  <!-- Right Side: Chat Window -->
-  <div id="chat-container">
-    <div id="chat-header">
-      <span>⚡ Unified AI Workspace (100% Offline)</span>
-    </div>
-    <div id="chat-box">
-      <div class="message-wrapper ai">
-        <div class="message-bubble">Hello! I have two brains now:
-1. Type a question and click <b>Search Notes</b> to find facts from your Memory Bank.
-2. Type a starting sentence and click <b>GPT-2 Complete</b> to generate creative text using the neural network!</div>
-      </div>
-    </div>
-
-    <div id="chat-form">
-      <input type="text" id="chat-input" placeholder="Type your prompt or question here..." autocomplete="off">
-      <button class="btn" id="search-btn">Search Notes</button>
-      <button class="btn" id="gpt-btn" disabled>GPT-2 Complete</button>
+  <div id="chat-box">
+    <div class="message-wrapper ai">
+      <div class="message-bubble">Downloading the local AI brain into your browser memory (~80MB)... Please wait a few seconds!</div>
     </div>
   </div>
 
-  <!-- Using type="module" to load the Transformers.js library -->
+  <form id="chat-form">
+    <input type="text" id="chat-input" placeholder="Type a question or command (e.g. 'Write an email to...')" disabled autocomplete="off">
+    <button type="submit" id="send-btn" disabled>Send</button>
+  </form>
+
   <script type="module">
     import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
 
-    // =========================================================
-    // BRAIN 1: CUSTOM JS SEARCH ENGINE (From Scratch)
-    // =========================================================
-    class CustomAIEngine {
-      constructor() {
-        this.stopWords = new Set(['what', 'is', 'the', 'a', 'an', 'when', 'where', 'who', 'how', 'are', 'in', 'on', 'at', 'to', 'for']);
-      }
-      tokenize(text) {
-        return text.toLowerCase().replace(/[^\w\s]/gi, '').split(/\s+/).filter(word => word.length > 1);
-      }
-      processQuery(userQuery, knowledgeText) {
-        if (!knowledgeText.trim()) return "I don't have any notes stored yet! Please paste some in the Memory Bank.";
-        
-        const sentences = knowledgeText.split(/\n+|\. /).map(s => s.trim()).filter(s => s.length > 0);
-        const queryTokens = this.tokenize(userQuery);
-        let bestMatch = null;
-        let highestScore = 0;
-
-        for (const sentence of sentences) {
-          const sentenceTokens = this.tokenize(sentence);
-          let score = 0;
-          const keywords = queryTokens.filter(word => !this.stopWords.has(word));
-          let searchWords = keywords.length > 0 ? keywords : queryTokens;
-
-          for (const word of searchWords) {
-            if (sentenceTokens.includes(word)) score += 2;
-          }
-          if (score > highestScore) {
-            highestScore = score;
-            bestMatch = sentence;
-          }
-        }
-        return highestScore > 0 ? `Based on your notes:\n• ${bestMatch}` : "I searched your notes, but couldn't find a match.";
-      }
-    }
-
-    const aiEngine = new CustomAIEngine();
-
-    // =========================================================
-    // UI & DOM ELEMENTS
-    // =========================================================
+    const statusEl = document.getElementById('status');
     const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
     const chatBox = document.getElementById('chat-box');
-    const knowledgeBase = document.getElementById('knowledge-base');
-    const searchBtn = document.getElementById('search-btn');
-    const gptBtn = document.getElementById('gpt-btn');
-    const gptStatus = document.getElementById('gpt-status');
+    const chatForm = document.getElementById('chat-form');
 
-    let gptGenerator = null;
+    let aiPipeline = null;
 
     function addMessage(sender, text) {
       const wrapper = document.createElement('div');
@@ -138,91 +69,58 @@ Photosynthesis converts sunlight into sugar."></textarea>
       wrapper.appendChild(bubble);
       chatBox.appendChild(wrapper);
       chatBox.scrollTop = chatBox.scrollHeight;
+      return bubble;
     }
 
-    // =========================================================
-    // BRAIN 2: GPT-2 INITIALIZATION
-    // =========================================================
-    async function loadGPT2() {
+    async function initAI() {
       try {
-        gptGenerator = await pipeline('text-generation', 'Xenova/gpt2');
-        gptStatus.textContent = '🟢 GPT-2 is Ready!';
-        gptStatus.style.color = '#4ade80';
-        gptBtn.disabled = false;
-      } catch (error) {
-        gptStatus.textContent = '🔴 Failed to load GPT-2.';
-        console.error(error);
+        // Loads an Instruction-Tuned AI model (LaMini-Flan-T5)
+        aiPipeline = await pipeline('text2text-generation', 'Xenova/LaMini-Flan-T5-77M');
+
+        statusEl.textContent = '🟢 AI Ready (Offline)';
+        statusEl.style.color = '#4ade80';
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+
+        chatBox.innerHTML = '';
+        addMessage('ai', 'I am ready! You can ask me general questions or command me to write emails, summaries, and messages.');
+      } catch (err) {
+        statusEl.textContent = '🔴 Failed to load AI model.';
+        console.error(err);
       }
     }
-    
-    // Start downloading the model in the background immediately
-    loadGPT2();
 
-    // =========================================================
-    // EVENT LISTENERS FOR BOTH BRAINS
-    // =========================================================
+    initAI();
 
-    // Search Notes Button (Instant)
-    searchBtn.addEventListener('click', () => {
-      const userMessage = chatInput.value.trim();
-      if (!userMessage) return;
+    chatForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userText = chatInput.value.trim();
+      if (!userText || !aiPipeline) return;
 
-      addMessage('user', userMessage);
+      addMessage('user', userText);
       chatInput.value = '';
 
-      setTimeout(() => {
-        const reply = aiEngine.processQuery(userMessage, knowledgeBase.value);
-        addMessage('ai', reply);
-      }, 100); 
-    });
+      const loadingBubble = addMessage('ai', 'Thinking and generating response...');
 
-    // GPT-2 Button (Neural Network)
-    gptBtn.addEventListener('click', async () => {
-      const userMessage = chatInput.value.trim();
-      if (!userMessage) return;
-
-      addMessage('user', userMessage);
-      chatInput.value = '';
-      
-      const thinkingId = Math.random().toString(36).substring(7);
-      
-      // Add a temporary thinking message
-      const wrapper = document.createElement('div');
-      wrapper.className = `message-wrapper gpt2`;
-      wrapper.id = `think-${thinkingId}`;
-      const bubble = document.createElement('div');
-      bubble.className = 'message-bubble';
-      bubble.textContent = "GPT-2 is generating text...";
-      wrapper.appendChild(bubble);
-      chatBox.appendChild(wrapper);
-      chatBox.scrollTop = chatBox.scrollHeight;
-
-      searchBtn.disabled = true;
-      gptBtn.disabled = true;
+      chatInput.disabled = true;
+      sendBtn.disabled = true;
 
       try {
-        const output = await gptGenerator(userMessage, {
-          max_new_tokens: 30, // How many words it generates
-          temperature: 0.8    // Creativity level
+        // Run AI instruction processing locally
+        const output = await aiPipeline(userText, {
+          max_new_tokens: 200, // Allows longer outputs for emails
+          temperature: 0.7
         });
 
-        // Replace thinking message with real output
-        document.getElementById(`think-${thinkingId}`).remove();
-        addMessage('gpt2', output[0].generated_text);
-      } catch (error) {
-        document.getElementById(`think-${thinkingId}`).remove();
-        addMessage('gpt2', "Error generating text with GPT-2.");
+        loadingBubble.textContent = output[0].generated_text || "I couldn't generate a response.";
+      } catch (err) {
+        loadingBubble.textContent = "Error calculating response.";
+        console.error(err);
       }
 
-      searchBtn.disabled = false;
-      gptBtn.disabled = false;
-    });
-
-    // Allow pressing "Enter" to default to the Search Notes function
-    chatInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        searchBtn.click();
-      }
+      chatInput.disabled = false;
+      sendBtn.disabled = false;
+      chatInput.focus();
     });
   </script>
 </body>
