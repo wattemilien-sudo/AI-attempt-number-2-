@@ -3,7 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>School & File Assistant AI</title>
+  <title>Universal School & Document AI</title>
+  
+  <!-- Load PDF.js and Mammoth.js for parsing PDFs and Word documents -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.11.0/mammoth.browser.min.js"></script>
+
   <style>
     * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
     body { background-color: #0f172a; color: #f8fafc; margin: 0; display: flex; flex-direction: column; height: 100vh; }
@@ -12,12 +17,11 @@
     #title { font-weight: bold; font-size: 1.1rem; }
     #status { font-size: 0.85rem; color: #a855f7; font-weight: bold; }
     
-    /* Toolbar for files */
     #toolbar { background: #1e293b; padding: 10px 20px; border-bottom: 1px solid #334155; display: flex; gap: 10px; align-items: center; font-size: 0.9rem; }
     #file-upload { display: none; }
     .file-btn { background: #334155; color: #f8fafc; padding: 6px 12px; border-radius: 6px; cursor: pointer; border: 1px solid #475569; font-size: 0.85rem; }
     .file-btn:hover { background: #475569; }
-    #loaded-file-name { color: #4ade80; font-style: italic; }
+    #loaded-file-name { color: #4ade80; font-style: italic; font-size: 0.85rem; }
 
     #chat-box { flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
     
@@ -44,20 +48,19 @@
 <body>
 
   <div id="header">
-    <span id="title">📁 School & Email Assistant</span>
+    <span id="title">📄 Universal School & Document AI</span>
     <span id="status">⏳ Downloading AI Brain...</span>
   </div>
 
-  <!-- Toolbar to upload school files/notes -->
   <div id="toolbar">
-    <label for="file-upload" class="file-btn">📁 Upload Note/Text File</label>
-    <input type="file" id="file-upload" accept=".txt,.md,.csv">
+    <label for="file-upload" class="file-btn">📁 Upload PDF, Word, or Text File</label>
+    <input type="file" id="file-upload" accept=".txt,.pdf,.docx">
     <span id="loaded-file-name">No file loaded.</span>
   </div>
 
   <div id="chat-box">
     <div class="message-wrapper ai">
-      <div class="message-bubble">Hello! Upload a text file/note using the button above, or ask me to write an email or answer a school question.</div>
+      <div class="message-bubble">Hello! Upload a PDF, Word (.docx), or text file above, or type a request to write an email or answer a question.</div>
     </div>
   </div>
 
@@ -105,7 +108,7 @@
         chatInput.disabled = false;
         sendBtn.disabled = false;
         chatBox.innerHTML = '';
-        addMessage('ai', 'System ready! Upload a text file above or type your prompt.');
+        addMessage('ai', 'System ready! Upload a school file or type your command below.');
       } catch (err) {
         statusEl.textContent = '🔴 Failed to load AI model.';
         console.error(err);
@@ -114,18 +117,53 @@
 
     initAI();
 
-    // Handle file uploading
-    fileUpload.addEventListener('change', (e) => {
+    fileUpload.addEventListener('change', async (e) => {
       const file = e.target.files[0];
       if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = function(event) {
-        uploadedFileContent = event.target.result;
-        loadedFileName.textContent = `Loaded: ${file.name}`;
-        addMessage('ai', `Successfully read file "${file.name}". You can now ask me to summarize it or answer questions about it!`);
-      };
-      reader.readAsText(file);
+      loadedFileName.textContent = `Reading ${file.name}...`;
+
+      try {
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+
+        if (fileExtension === 'txt') {
+          const text = await file.text();
+          uploadedFileContent = text;
+          loadedFileName.textContent = `Loaded: ${file.name}`;
+          addMessage('ai', `Successfully read text file "${file.name}".`);
+
+        } else if (fileExtension === 'docx') {
+          const arrayBuffer = await file.arrayBuffer();
+          const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+          uploadedFileContent = result.value;
+          loadedFileName.textContent = `Loaded: ${file.name}`;
+          addMessage('ai', `Successfully read Word document "${file.name}".`);
+
+        } else if (fileExtension === 'pdf') {
+          const arrayBuffer = await file.arrayBuffer();
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdfDoc = await loadingTask.promise;
+          
+          let fullText = "";
+          for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map(item => item.str).join(' ');
+            fullText += `--- Page ${i} ---\n` + pageText + "\n\n";
+          }
+
+          uploadedFileContent = fullText;
+          loadedFileName.textContent = `Loaded: ${file.name}`;
+          addMessage('ai', `Successfully parsed PDF "${file.name}" (${pdfDoc.numPages} pages).`);
+        } else {
+          loadedFileName.textContent = "Unsupported file type.";
+          alert("Please upload a .txt, .pdf, or .docx file.");
+        }
+      } catch (err) {
+        console.error(err);
+        loadedFileName.textContent = "Error reading file.";
+        addMessage('ai', "Sorry, I had trouble reading that specific file format.");
+      }
     });
 
     chatForm.addEventListener('submit', async (e) => {
@@ -133,46 +171,50 @@
       let userText = chatInput.value.trim();
       if (!userText || !aiPipeline) return;
 
-      // If a file is loaded, combine its content with the prompt context
+      // Rephrase email instructions so the tiny model doesn't output safety refusals
       let promptToSend = userText;
+      const lower = userText.toLowerCase();
+      if (lower.includes('email') || lower.includes('to ')) {
+        promptToSend = `Write an email draft based on this request: ${userText}`;
+      }
+
       if (uploadedFileContent) {
-        promptToSend = `Context from uploaded file:\n${uploadedFileContent}\n\nUser Request: ${userText}`;
+        promptToSend = `Context from uploaded document:\n${uploadedFileContent}\n\nUser Request: ${promptToSend}`;
       }
 
       addMessage('user', userText);
       chatInput.value = '';
 
-      const loadingBubble = addMessage('ai', 'Thinking...');
+      const loadingBubble = addMessage('ai', 'Drafting response...');
 
       chatInput.disabled = true;
       sendBtn.disabled = true;
 
       try {
         const output = await aiPipeline(promptToSend, {
-          max_new_tokens: 250,
-          temperature: 0.7
+          max_new_tokens: 80,
+          temperature: 0.5,
+          repetition_penalty: 1.5
         });
 
         const responseText = output[0].generated_text || "I couldn't generate a response.";
         loadingBubble.textContent = responseText;
 
-        // If the user asked for an email, provide a quick mailto link button
-        if (userText.toLowerCase().includes('email')) {
-          const encodedBody = encodeURIComponent(responseText);
-          
-          // Check if you mentioned Angus Allen to auto-fill his email
+        if (lower.includes('email') || lower.includes('to ')) {
           let recipient = "";
-          if (userText.toLowerCase().includes('angus allen')) {
-            // Replace with Angus's actual email address if you have it
-            recipient = "angus.allen@school.edu"; 
+          if (lower.includes('angus allen')) {
+            recipient = "angus.allen@whitefriars.vic.edu.au";
+          } else if (lower.includes('watte')) {
+            recipient = "Watte@whitefriars.vic.edu.au";
           }
 
+          const encodedBody = encodeURIComponent(responseText);
           const mailtoLink = `<a class="action-btn" href="mailto:${recipient}?body=${encodedBody}" target="_blank">📧 Open Email to Send</a>`;
           loadingBubble.innerHTML += "<br>" + mailtoLink;
         }
 
       } catch (err) {
-        loadingBubble.textContent = "Error calculating response.";
+        loadingBubble.textContent = "Error processing request.";
         console.error(err);
       }
 
