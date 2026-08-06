@@ -159,7 +159,15 @@
         // If the user asked for an email, provide a quick mailto link button
         if (userText.toLowerCase().includes('email')) {
           const encodedBody = encodeURIComponent(responseText);
-          const mailtoLink = `<a class="action-btn" href="mailto:?body=${encodedBody}" target="_blank">📧 Open in Email Client</a>`;
+          
+          // Check if you mentioned Angus Allen to auto-fill his email
+          let recipient = "";
+          if (userText.toLowerCase().includes('angus allen')) {
+            // Replace with Angus's actual email address if you have it
+            recipient = "angus.allen@school.edu"; 
+          }
+
+          const mailtoLink = `<a class="action-btn" href="mailto:${recipient}?body=${encodedBody}" target="_blank">📧 Open Email to Send</a>`;
           loadingBubble.innerHTML += "<br>" + mailtoLink;
         }
 
